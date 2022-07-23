@@ -15,8 +15,7 @@ from ._compat import wrap_spec
 Package = Union[types.ModuleType, str, None]
 
 
-def files(package=None):
-    # type: (Package) -> Traversable
+def files(package: Package = None) -> Traversable:
     """
     Get a Traversable resource from a package
     """
@@ -24,8 +23,7 @@ def files(package=None):
     return from_package(resolve(package, context))
 
 
-def get_resource_reader(package):
-    # type: (types.ModuleType) -> Optional[ResourceReader]
+def get_resource_reader(package: types.ModuleType) -> Optional[ResourceReader]:
     """
     Return the package's loader if it's a ResourceReader.
     """
@@ -41,8 +39,7 @@ def get_resource_reader(package):
     return reader(spec.name)  # type: ignore
 
 
-def resolve(candidate, context):
-    # type: (Package, Dict[str, str]) -> types.ModuleType
+def resolve(candidate: Package, context: Dict[str, str]) -> types.ModuleType:
     impl = candidate or context['__name__']  # type: ignore
     return impl if isinstance(impl, types.ModuleType) else importlib.import_module(impl)
 
