@@ -5,21 +5,23 @@ import functools
 import contextlib
 import types
 import importlib
+import inspect
 
-from typing import Union, Optional
+from typing import Union, Optional, Dict
 from .abc import ResourceReader, Traversable
 
 from ._compat import wrap_spec
 
-Package = Union[types.ModuleType, str]
+Package = Union[types.ModuleType, str, None]
 
 
-def files(package):
+def files(package=None):
     # type: (Package) -> Traversable
     """
     Get a Traversable resource from a package
     """
-    return from_package(resolve(package))
+    context = inspect.currentframe().f_back.f_globals  # type: ignore
+    return from_package(resolve(package, context))
 
 
 def get_resource_reader(package):
@@ -39,9 +41,10 @@ def get_resource_reader(package):
     return reader(spec.name)  # type: ignore
 
 
-def resolve(cand):
-    # type: (Package) -> types.ModuleType
-    return cand if isinstance(cand, types.ModuleType) else importlib.import_module(cand)
+def resolve(candidate, context):
+    # type: (Package, Dict[str, str]) -> types.ModuleType
+    impl = candidate or context['__name__']  # type: ignore
+    return impl if isinstance(impl, types.ModuleType) else importlib.import_module(impl)
 
 
 def from_package(package):
