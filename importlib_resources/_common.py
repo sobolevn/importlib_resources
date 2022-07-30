@@ -19,7 +19,7 @@ def files(package: Package = None) -> Traversable:
     """
     Get a Traversable resource from a package
     """
-    context = inspect.currentframe().f_back.f_globals  # type: ignore
+    context = inspect.stack()[1].frame.f_globals  # type: ignore
     return from_package(resolve(package, context))
 
 
