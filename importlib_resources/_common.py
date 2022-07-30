@@ -6,8 +6,9 @@ import contextlib
 import types
 import importlib
 import inspect
+import itertools
 
-from typing import Union, Optional, Dict
+from typing import Union, Optional
 from .abc import ResourceReader, Traversable
 
 from ._compat import wrap_spec
@@ -19,8 +20,7 @@ def files(package: Package = None) -> Traversable:
     """
     Get a Traversable resource from a package
     """
-    context = inspect.stack()[1].frame.f_globals  # type: ignore
-    return from_package(resolve(package, context))
+    return from_package(resolve(package))
 
 
 def get_resource_reader(package: types.ModuleType) -> Optional[ResourceReader]:
@@ -39,9 +39,21 @@ def get_resource_reader(package: types.ModuleType) -> Optional[ResourceReader]:
     return reader(spec.name)  # type: ignore
 
 
-def resolve(candidate: Package, context: Dict[str, str]) -> types.ModuleType:
-    impl = candidate or context['__name__']  # type: ignore
+def resolve(candidate: Package) -> types.ModuleType:
+    impl = candidate or _infer_caller().f_globals['__name__']
     return impl if isinstance(impl, types.ModuleType) else importlib.import_module(impl)
+
+
+def _infer_caller():
+    """
+    Walk the stack and find the frame of the first caller not in this module.
+    """
+
+    def is_this_file(frame_info):
+        return frame_info.filename == __file__
+
+    not_this_file = itertools.filterfalse(is_this_file, inspect.stack())
+    return next(not_this_file).frame
 
 
 def from_package(package):
